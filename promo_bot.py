@@ -52,32 +52,28 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     existing = await get_user_promo(user.id)
     if existing:
-        text = "Privet, " + user.first_name + "! Tvoy promokod uzhe vydan:\n\n" + existing + "\n\nKazhdy polzovatel poluchaet tolko odin promokod."
-        await update.message.reply_text(text)
+        await update.message.reply_text("Privet, " + user.first_name + "! Tvoy promokod: " + existing)
     else:
         promo = await generate_unique_promo()
         await save_user_promo(user.id, user.username, promo)
-        text = "Gotovo! Tvoy promokod:\n\n" + promo + "\n\nPromokod odnorazovy i privyazan tolko k tebe."
-        await update.message.reply_text(text)
+        await update.message.reply_text("Gotovo! Tvoy promokod: " + promo)
 
 async def cmd_mypromo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     promo = await get_user_promo(update.effective_user.id)
     if promo:
         await update.message.reply_text("Tvoy promokod: " + promo)
     else:
-        await update.message.reply_text("Promokoda net. Napishi /start chtoby poluchit!")
+        await update.message.reply_text("Net promokoda. Napishi /start!")
 
-async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("/start - poluchit promokod\n/mypromo - moy promokod\n/help - pomosh")
-
-async def main():
+async def post_init(app):
     await init_db()
-    app = ApplicationBuilder().token(BOT_TOKEN).build()
+
+def main():
+    app = ApplicationBuilder().token(BOT_TOKEN).post_init(post_init).build()
     app.add_handler(CommandHandler("start", cmd_start))
     app.add_handler(CommandHandler("mypromo", cmd_mypromo))
-    app.add_handler(CommandHandler("help", cmd_help))
     print("Bot started!")
-    await app.run_polling()
+    app.run_polling()
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
